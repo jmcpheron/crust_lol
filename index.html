@@ -30,6 +30,7 @@
         }
         body {
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
@@ -39,12 +40,24 @@
         canvas {
             border: 2px solid #333;
         }
+        footer {
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
+    <div id="egg"><img src="114p_next_time.png" /></div>
+    <div id="about">
+        <h1>Crust Nud'r</h1>
+        <p>Welcome to Crust Nud'r! Help the hand nudge the bread slices onto the conveyor belt. Avoid penalties and score as high as you can!</p>
+    </div>
     <div id="game">
+        <h2>Crust Nud'r</h2>
         <canvas id="gameCanvas" width="800" height="400"></canvas>
     </div>
+    <footer>
+        <p>Check out the source code on <a href="https://github.com/your-repo">GitHub</a>.</p>
+    </footer>
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
