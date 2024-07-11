@@ -5,6 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crust Nud'r</title>
     <style>
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background-image: url('114p_next_time.png');
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            opacity: 0.5;
+            display: none;
+            transition: opacity 2s ease-in-out;
+        }
+        body.show-background::before {
+            display: block;
+            opacity: 1;
+        }
+        body.hide-background::before {
+            opacity: 0;
+        }
         body {
             display: flex;
             justify-content: center;
@@ -19,6 +42,8 @@
     </style>
 </head>
 <body>
+    <h1>Crust Nud'r</h1>
+    <a href="#" id="jjm-debug">Debug</a>
     <div id="egg"><img src="114p_next_time.png" /></div>
     <div id="game">
         <canvas id="gameCanvas" width="800" height="400"></canvas>
@@ -54,6 +79,7 @@
         let score = 0;
         let penalties = 0;
         let spacePressed = false;
+        let backgroundShown = false;
 
         // Load hand image
         const handImage = new Image();
@@ -125,6 +151,16 @@
             ctx.fillText(`Dock benefits: ${penalties}`, 10, 60);
         }
 
+        function showBackground() {
+            document.body.classList.add('show-background');
+            setTimeout(() => {
+                document.body.classList.add('hide-background');
+                setTimeout(() => {
+                    document.body.classList.remove('show-background', 'hide-background');
+                }, 2000);
+            }, 2000);
+        }
+
         function update() {
             // Move hand
             if (spacePressed && hand.y > 0) {
@@ -146,6 +182,10 @@
                     if (bread.x > CANVAS_WIDTH) {
                         breadSlices.splice(index, 1);
                         score++;
+                        if (score > 25 && !backgroundShown) {
+                            showBackground();
+                            backgroundShown = true;
+                        }
                     }
 
                     // Check collision with hand
