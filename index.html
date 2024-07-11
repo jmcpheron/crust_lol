@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crust Nud'r</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        canvas {
+            border: 2px solid #333;
+        }
+    </style>
+</head>
+<body>
+    <div id="egg"><img src="114p_next_time.png" /></div>
+	<div id="game">
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+	</div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const CANVAS_WIDTH = canvas.width;
+        const CANVAS_HEIGHT = canvas.height;
+        const BREAD_WIDTH = 60;
+        const BREAD_HEIGHT = 40;
+        const HAND_WIDTH = 40;
+        const HAND_HEIGHT = 60;
+        const CONVEYOR_SPEED = 1.5;
+        const HAND_SPEED = 5;
+        const HAND_RETURN_SPEED = 2;
+        const NUDGE_DISTANCE = 10;
+        const BELT_WIDTH_START = 200;
+        const BELT_WIDTH_END = 80;
+        const BELT_SLOPE = (BELT_WIDTH_END - BELT_WIDTH_START) / CANVAS_WIDTH;
+        const PENALTY_SCORE = 5;
+
+        let hand = {
+            x: CANVAS_WIDTH * 0.2 - HAND_WIDTH / 2,  // Moved closer to the left side
+            y: CANVAS_HEIGHT - HAND_HEIGHT - 10,
+            width: HAND_WIDTH,
+            height: HAND_HEIGHT,
+            speed: 0
+        };
+
+        let breadSlices = [];
+        let score = 0;
+        let penalties = 0;
+        let spacePressed = false;
+
+        // Load hand image
+        const handImage = new Image();
+        handImage.src = 'crusty_hand.png'; // Make sure this path is correct
+
+        // Wait for the image to load before starting the game
+        handImage.onload = function() {
+            gameLoop();
+        };
+
+        function getBeltWidth(x) {
+            return BELT_WIDTH_START + BELT_SLOPE * x;
+        }
+
+        function getBeltY(x) {
+            return CANVAS_HEIGHT / 2 - (BELT_WIDTH_START - BELT_WIDTH_END) / 4 - getBeltWidth(x) / 2;
+        }
+
+        function createBreadSlice() {
+            const beltWidth = getBeltWidth(0);
+            const yVariation = Math.random() * (beltWidth - BREAD_HEIGHT) - (beltWidth - BREAD_HEIGHT) / 2;
+            return {
+                x: 0,
+                y: getBeltY(0) + beltWidth / 2 - BREAD_HEIGHT / 2 + yVariation,
+                width: BREAD_WIDTH,
+                height: BREAD_HEIGHT,
+                falling: false
+            };
+        }
+
+        function drawBreadSlice(bread) {
+            ctx.fillStyle = '#F5DEB3';
+            ctx.fillRect(bread.x, bread.y, bread.width, bread.height);
+            ctx.strokeStyle = '#8B4513';
+            ctx.strokeRect(bread.x, bread.y, bread.width, bread.height);
+        }
+
+        function drawHand() {
+            //ctx.fillStyle = '#FFA07A';
+            //ctx.fillRect(hand.x, hand.y, hand.width, hand.height);
+            ctx.drawImage(handImage, hand.x, hand.y, hand.width, hand.height);
+        }
+
+
+        function drawConveyorBelt() {
+            ctx.beginPath();
+            ctx.moveTo(0, getBeltY(0));
+            ctx.lineTo(CANVAS_WIDTH, getBeltY(CANVAS_WIDTH));
+            ctx.lineTo(CANVAS_WIDTH, getBeltY(CANVAS_WIDTH) + getBeltWidth(CANVAS_WIDTH));
+            ctx.lineTo(0, getBeltY(0) + getBeltWidth(0));
+            ctx.closePath();
+            ctx.fillStyle = '#808080';
+            ctx.fill();
+            
+            // Add belt texture
+            ctx.fillStyle = '#606060';
+            for (let i = 0; i < CANVAS_WIDTH; i += 20) {
+                const y = getBeltY(i);
+                const height = getBeltWidth(i);
+                ctx.fillRect(i, y, 10, height);
+            }
+        }
+
+        function drawScore() {
+            ctx.fillStyle = '#000';
+            ctx.font = '20px Arial';
+            ctx.fillText(`Pay: ${score}`, 10, 30);
+            ctx.fillStyle = '#FF0000';
+            ctx.fillText(`Dock benefits: ${penalties}`, 10, 60);
+        }
+
+        function update() {
+            // Move hand
+            if (spacePressed && hand.y > 0) {
+                hand.y -= HAND_SPEED;
+            } else if (hand.y < CANVAS_HEIGHT - HAND_HEIGHT - 10) {
+                hand.y += HAND_RETURN_SPEED;
+            }
+
+            // Update bread slices
+            breadSlices.forEach((bread, index) => {
+                if (bread.falling) {
+                    bread.y += 3;
+                    if (bread.y > CANVAS_HEIGHT) {
+                        breadSlices.splice(index, 1);
+                        penalties += PENALTY_SCORE;
+                    }
+                } else {
+                    bread.x += CONVEYOR_SPEED;
+                    if (bread.x > CANVAS_WIDTH) {
+                        breadSlices.splice(index, 1);
+                        score++;
+                    }
+
+                    // Check collision with hand
+                    if (hand.x < bread.x + bread.width &&
+                        hand.x + hand.width > bread.x &&
+                        hand.y < bread.y + bread.height &&
+                        hand.y + hand.height > bread.y) {
+                        // Nudge bread upwards
+                        bread.y -= NUDGE_DISTANCE;
+                    }
+
+                    // Check if bread is off the belt
+                    const beltTop = getBeltY(bread.x);
+                    const beltBottom = beltTop + getBeltWidth(bread.x);
+                    if (bread.y < beltTop || bread.y + bread.height > beltBottom) {
+                        bread.falling = true;
+                    }
+                }
+            });
+
+            // Add new bread slice
+            if (Math.random() < 0.02) {
+                breadSlices.push(createBreadSlice());
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            drawConveyorBelt();
+            breadSlices.forEach(drawBreadSlice);
+            drawHand();
+            drawScore();
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                spacePressed = true;
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.code === 'Space') {
+                spacePressed = false;
+            }
+        });
+
+        gameLoop();
+    </script>
+</body>
+</html>
