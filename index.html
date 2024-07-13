@@ -36,9 +36,18 @@
             height: 100vh;
             margin: 0;
             background-color: #f0f0f0;
+            touch-action: none;
+        }
+        #game {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
         }
         canvas {
             border: 2px solid #333;
+            width: 100%;
+            height: auto;
+            text-align: center;
         }
         footer {
             margin-top: 20px;
@@ -50,19 +59,19 @@
     </div>
     <div id="game">
         <h2>Crust Nud'r</h2>
-        <canvas id="gameCanvas" width="800" height="400"></canvas>
+        
+<canvas id="gameCanvas" width="800" height="400"></canvas>
     </div>
     <footer>
         <p>(Try the spacebar. Mobile 🤷)<br /><br /><a href="https://github.com/jmcpheron/crust_lol/">https://github.com/jmcpheron/crust_lol/</a>.<br /><br />
-		With help from:
-		<ul>
+        With help from:
+        <ul>
         <li><a href="https://youtube.com/clip/UgkxPBkNz1mBspyCHVjJtCqV7208s-10ABhj?si=PcUuGgI0A1BXO5ws">AI For Humans</a></li>
         <li><a href="https://www.udio.com/songs/sYb2kh94c4Fm69d7DNhHJK">Soundtrack</a></li>
         <li><a href="https://chatgpt.com/">ChatGPT</a></li>
         <li><a href="https://www.anthropic.com/claude">anthropic.com/claude</a></li>
         <li><a href="https://plandex.ai/">Plandex | Build complex software with AI.</a></li>
         <li><a href="https://www.meta.ai/">meta.ai | Crusty hand graphic</a></li>
-        <li><a href="https://youtube.com/clip/UgkxPBkNz1mBspyCHVjJtCqV7208s-10ABhj?si=PcUuGgI0A1BXO5ws">AI For Humans</a>
         </ul>
         </p>
     </footer>
@@ -244,6 +253,18 @@
             requestAnimationFrame(gameLoop);
         }
 
+        // Touch events for mobile
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            spacePressed = true;
+        });
+
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            spacePressed = false;
+        });
+
+        // Keep keyboard controls for desktop
         document.addEventListener('keydown', (e) => {
             if (e.code === 'Space') {
                 spacePressed = true;
